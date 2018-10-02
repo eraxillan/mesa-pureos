@@ -142,6 +142,10 @@ struct etna_cmd_stream_priv {
 		struct drm_etnaviv_gem_submit_reloc *relocs;
 		uint32_t nr_relocs, max_relocs;
 
+		/* reloc's table: */
+		struct drm_etnaviv_gem_submit_bo_reloc *bo_relocs;
+		uint32_t nr_bo_relocs, max_bo_relocs;
+
 		/* perf's table: */
 		struct drm_etnaviv_gem_submit_pmr *pmrs;
 		uint32_t nr_pmrs, max_pmrs;

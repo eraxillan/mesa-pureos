@@ -193,6 +193,17 @@ struct etna_reloc {
 
 void etna_cmd_stream_reloc(struct etna_cmd_stream *stream, const struct etna_reloc *r);
 
+struct etna_bo_reloc {
+	struct etna_bo *patch_bo;	       /* the bo we patch */
+	struct etna_bo *bo;
+	uint32_t flags;
+
+	uint32_t patch_offset;
+	uint32_t offset;
+};
+
+void etna_drm_bo_reloc(struct etna_cmd_stream *stream, const struct etna_bo_reloc *r);
+
 /* performance monitoring functions:
  */
 

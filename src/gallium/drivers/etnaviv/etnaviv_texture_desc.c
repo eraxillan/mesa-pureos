@@ -162,8 +162,14 @@ etna_create_sampler_view_desc(struct pipe_context *pctx, struct pipe_resource *p
                           TEXDESC_LOG_SIZE_EXT_HEIGHT(etna_log2_fixp88(base_height)));
    DESC_SET(SIZE, VIVS_TE_SAMPLER_SIZE_WIDTH(base_width) |
                   VIVS_TE_SAMPLER_SIZE_HEIGHT(base_height));
-   for (int lod = 0; lod <= res->base.last_level; ++lod)
-      DESC_SET(LOD_ADDR(lod), etna_bo_gpu_address(res->bo) + res->levels[lod].offset);
+   sv->maxlod = res->base.last_level;
+   for (int lod = 0; lod <= res->base.last_level; ++lod) {
+      sv->TEXDESC_LOD_ADDR[lod].patch_bo = sv->bo;
+      sv->TEXDESC_LOD_ADDR[lod].patch_offset = TEXDESC_LOD_ADDR(lod);
+      sv->TEXDESC_LOD_ADDR[lod].bo = res->bo;
+      sv->TEXDESC_LOD_ADDR[lod].offset = res->levels[lod].offset;
+      sv->TEXDESC_LOD_ADDR[lod].flags = ETNA_RELOC_READ;
+   }
 #undef DESC_SET
 
    etna_bo_cpu_fini(sv->bo);
@@ -171,6 +177,7 @@ etna_create_sampler_view_desc(struct pipe_context *pctx, struct pipe_resource *p
    sv->DESC_ADDR.bo = sv->bo;
    sv->DESC_ADDR.offset = 0;
    sv->DESC_ADDR.flags = ETNA_RELOC_READ;
+   sv->patched = false;
 
    return &sv->base;
 error:
@@ -183,16 +190,21 @@ etna_sampler_view_update_descriptor(struct etna_context *ctx,
                                     struct etna_cmd_stream *stream,
                                     struct etna_sampler_view_desc *sv)
 {
-   /* TODO: this should instruct the kernel to update the descriptor when the
-    * bo is submitted. For now, just prevent the bo from being freed
-    * while it is in use indirectly.
-    */
    struct etna_resource *res = etna_resource(sv->base.texture);
+
+   if (sv->patched)
+      return;
+
    if (res->texture) {
       res = etna_resource(res->texture);
    }
    /* No need to ref LOD levels individually as they'll always come from the same bo */
-   etna_cmd_stream_ref(stream, res->bo);
+   etna_drm_bo_ref(res->bo);
+
+   for (int y = 0; y <= sv->maxlod; y++)
+      etna_drm_bo_reloc(stream, &sv->TEXDESC_LOD_ADDR[y]);
+
+   sv->patched = true;
 }
 
 static void
@@ -266,4 +278,3 @@ etna_texture_desc_init(struct pipe_context *pctx)
    ctx->base.sampler_view_destroy = etna_sampler_view_desc_destroy;
    ctx->emit_texture_state = etna_emit_texture_desc;
 }
-

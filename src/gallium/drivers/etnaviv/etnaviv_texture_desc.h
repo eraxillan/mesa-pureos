@@ -34,6 +34,7 @@
 #include "pipe/p_state.h"
 
 #include "hw/state_3d.xml.h"
+#include "hw/texdesc_3d.xml.h"
 
 struct etna_context;
 
@@ -60,6 +61,9 @@ struct etna_sampler_view_desc {
 
    struct etna_bo *bo;
    struct etna_reloc DESC_ADDR;
+   struct etna_bo_reloc TEXDESC_LOD_ADDR[TEXDESC_LOD_ADDR__LEN];
+   int maxlod;
+   boolean patched;
 };
 
 static inline struct etna_sampler_view_desc *
