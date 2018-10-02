@@ -164,7 +164,7 @@ etna_create_sampler_view_desc(struct pipe_context *pctx, struct pipe_resource *p
                   VIVS_TE_SAMPLER_SIZE_HEIGHT(base_height));
    for (int lod = 0; lod <= res->base.last_level; ++lod)
       DESC_SET(LOD_ADDR(lod), etna_bo_gpu_address(res->bo) + res->levels[lod].offset);
-#undef SET_DESC
+#undef DESC_SET
 
    etna_bo_cpu_fini(sv->bo);
 
