@@ -516,7 +516,9 @@ etna_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
       uint32_t *buf = etna_bo_map(ctx->dummy_desc_bo);
       etna_bo_cpu_prep(ctx->dummy_desc_bo, DRM_ETNA_PREP_WRITE);
       memset(buf, 0, 0x100);
-      etna_bo_cpu_fini(ctx->dummy_desc_bo);
+
+      etna_drm_bo_cpu_fini(ctx->dummy_desc_bo);
+      etna_drm_bo_ref(ctx->dummy_desc_bo);
       ctx->DUMMY_DESC_ADDR.bo = ctx->dummy_desc_bo;
       ctx->DUMMY_DESC_ADDR.offset = 0;
       ctx->DUMMY_DESC_ADDR.flags = ETNA_RELOC_READ;
