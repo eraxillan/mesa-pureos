@@ -220,7 +220,12 @@ etna_sampler_view_desc_destroy(struct pipe_context *pctx,
    etna_drm_bo_del(res->bo);
 
    pipe_resource_reference(&sv->base.texture, NULL);
+#if 0
+   /* Deleting the bo here leads to corrupted textures on e.g. application
+      start on wayland but why does the view get destroyed too early while the
+      textures are still in use? */
    etna_drm_bo_del(sv->bo);
+#endif
    FREE(sv);
 }
 
