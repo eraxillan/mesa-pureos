@@ -277,6 +277,11 @@ etna_emit_texture_desc(struct etna_context *ctx)
          }
       }
    }
+
+   etna_set_state(stream, VIVS_GL_FLUSH_CACHE,
+                  VIVS_GL_FLUSH_CACHE_DESCRIPTOR_UNK12 |
+                  VIVS_GL_FLUSH_CACHE_DESCRIPTOR_UNK13);
+
 }
 
 void
