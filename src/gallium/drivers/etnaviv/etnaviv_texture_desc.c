@@ -211,17 +211,17 @@ static void
 etna_sampler_view_desc_destroy(struct pipe_context *pctx,
                           struct pipe_sampler_view *view_)
 {
-   struct etna_sampler_view_desc *view = etna_sampler_view_desc(view_);
-   struct etna_resource *res = etna_resource(view->base.texture);
+   struct etna_sampler_view_desc *sv = etna_sampler_view_desc(view_);
+   struct etna_resource *res = etna_resource(sv->base.texture);
 
    if (res->texture) {
       res = etna_resource(res->texture);
    }
    etna_drm_bo_del(res->bo);
 
-   pipe_resource_reference(&view->base.texture, NULL);
-   etna_bo_del(view->bo);
-   FREE(view);
+   pipe_resource_reference(&sv->base.texture, NULL);
+   etna_drm_bo_del(sv->bo);
+   FREE(sv);
 }
 
 static void
