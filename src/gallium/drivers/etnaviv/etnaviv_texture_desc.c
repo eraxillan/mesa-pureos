@@ -199,7 +199,7 @@ etna_sampler_view_update_descriptor(struct etna_context *ctx,
       res = etna_resource(res->texture);
    }
    /* No need to ref LOD levels individually as they'll always come from the same bo */
-   etna_drm_bo_ref(res->bo);
+   etna_bo_ref(res->bo);
 
    for (int y = 0; y <= sv->maxlod; y++)
       etna_drm_bo_reloc(stream, &sv->TEXDESC_LOD_ADDR[y]);
@@ -217,7 +217,7 @@ etna_sampler_view_desc_destroy(struct pipe_context *pctx,
    if (res->texture) {
       res = etna_resource(res->texture);
    }
-   etna_drm_bo_del(res->bo);
+   etna_bo_del(res->bo);
 
    pipe_resource_reference(&sv->base.texture, NULL);
 #if 0
