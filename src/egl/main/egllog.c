@@ -45,6 +45,11 @@
 
 #include "egllog.h"
 
+#ifdef HAVE_TIZEN_PLATFORM
+#define LOG_TAG "MESA"
+#include <dlog.h>
+#endif
+
 #ifdef HAVE_ANDROID_PLATFORM
 #define LOG_TAG "EGL-MAIN"
 #if ANDROID_API_LEVEL >= 26
@@ -78,6 +83,7 @@ static const char *level_strings[] = {
 };
 
 
+#ifndef HAVE_TIZEN_PLATFORM
 /**
  * The default logger.  It prints the message to stderr.
  */
@@ -96,6 +102,7 @@ _eglDefaultLogger(EGLint level, const char *msg)
    fprintf(stderr, "libEGL %s: %s\n", level_strings[level], msg);
 #endif /* HAVE_ANDROID_PLATFORM */
 }
+#endif // HAVE_TIZEN_PLATFORM
 
 
 /**
@@ -153,13 +160,41 @@ _eglLog(EGLint level, const char *fmtStr, ...)
 
    mtx_lock(&logging.mutex);
 
+#ifdef HAVE_TIZEN_PLATFORM
+   log_priority dlog_prio;
+
+   switch (level) {
+   case _EGL_FATAL:
+      dlog_prio = DLOG_ERROR;
+      break;
+   case _EGL_WARNING:
+      dlog_prio = DLOG_WARN;
+      break;
+   case _EGL_INFO:
+      dlog_prio = DLOG_INFO;
+      break;
+   case _EGL_DEBUG:
+      dlog_prio = DLOG_DEBUG;
+      break;
+   default:
+      mtx_unlock(&logging.mutex);
+      return;
+   }
+#endif
+
    va_start(args, fmtStr);
+#ifdef HAVE_TIZEN_PLATFORM
+   __dlog_vprint(LOG_ID_SYSTEM, dlog_prio, LOG_TAG, fmtStr, args);
+#else
    ret = vsnprintf(msg, MAXSTRING, fmtStr, args);
    if (ret < 0 || ret >= MAXSTRING)
       strcpy(msg, "<message truncated>");
+#endif
    va_end(args);
 
+#ifndef HAVE_TIZEN_PLATFORM
    _eglDefaultLogger(level, msg);
+#endif
 
    mtx_unlock(&logging.mutex);
 

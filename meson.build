@@ -258,7 +258,7 @@ endif
 _platforms = get_option('platforms')
 if _platforms.contains('auto')
   if system_has_kms_drm
-    _platforms = ['x11', 'wayland', 'drm', 'surfaceless']
+    _platforms = ['x11', 'wayland', 'drm', 'surfaceless', 'tizen']
   elif ['darwin', 'windows', 'cygwin'].contains(host_machine.system())
     _platforms = ['x11', 'surfaceless']
   elif ['haiku'].contains(host_machine.system())
@@ -275,6 +275,7 @@ with_platform_wayland = _platforms.contains('wayland')
 with_platform_drm = _platforms.contains('drm')
 with_platform_haiku = _platforms.contains('haiku')
 with_platform_surfaceless = _platforms.contains('surfaceless')
+with_platform_tizen = _platforms.contains('tizen')
 
 with_platforms = false
 if _platforms.length() != 0 and _platforms != ['']
@@ -752,6 +753,16 @@ if with_platform_android
 endif
 if with_platform_haiku
   pre_args += '-DHAVE_HAIKU_PLATFORM'
+endif
+if with_platform_tizen
+  dep_tizen = [
+    dependency('tpl-egl'),
+    dependency('libtbm'),
+    dependency('libtdm'),
+    dependency('wayland-client'),
+    dependency('dlog')
+  ]
+  pre_args += '-DHAVE_TIZEN_PLATFORM'
 endif
 
 prog_python = import('python3').find_python()
@@ -1384,6 +1395,12 @@ if with_platform_wayland
     'linux-dmabuf', 'linux-dmabuf-unstable-v1.xml'
   )
   pre_args += ['-DHAVE_WAYLAND_PLATFORM', '-DWL_HIDE_DEPRECATED']
+endif
+
+# Tizen EGL platform also requires Wayland libraries
+if with_platform_tizen
+  dep_wayland_client = dependency('wayland-client', version : '>=1.11')
+  pre_args += ['-DHAVE_TIZEN_PLATFORM']
 endif
 
 dep_x11 = null_dep

@@ -50,6 +50,7 @@ enum _egl_platform_type {
    _EGL_PLATFORM_ANDROID,
    _EGL_PLATFORM_HAIKU,
    _EGL_PLATFORM_SURFACELESS,
+   _EGL_PLATFORM_TIZEN,
 
    _EGL_NUM_PLATFORMS,
    _EGL_INVALID_PLATFORM = -1
@@ -144,6 +145,10 @@ struct _egl_extensions
    EGLBoolean NOK_texture_from_pixmap;
 
    EGLBoolean NV_post_sub_buffer;
+
+#ifdef HAVE_TIZEN_PLATFORM
+   EGLBoolean TIZEN_image_native_surface;
+#endif
 
    EGLBoolean WL_bind_wayland_display;
    EGLBoolean WL_create_wayland_buffer_from_image;
@@ -299,6 +304,12 @@ _eglGetWaylandDisplay(struct wl_display *native_display,
 _EGLDisplay*
 _eglGetSurfacelessDisplay(void *native_display,
                           const EGLAttrib *attrib_list);
+#endif
+
+#ifdef HAVE_TIZEN_PLATFORM
+_EGLDisplay*
+_eglGetTizenDisplay(void *native_display,
+                    const EGLAttrib *attrib_list);
 #endif
 
 #ifdef __cplusplus

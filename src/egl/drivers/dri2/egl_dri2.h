@@ -69,6 +69,14 @@ struct zwp_linux_dmabuf_v1;
 #include <hardware/gralloc.h>
 #endif /* HAVE_ANDROID_PLATFORM */
 
+#ifdef HAVE_TIZEN_PLATFORM
+#include <tpl.h>
+#include <tbm_bufmgr.h>
+#include <tbm_drm_helper.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
+#endif /* HAVE_TIZEN_PLATFORM */
+
 #include "eglconfig.h"
 #include "eglcontext.h"
 #include "egldevice.h"
@@ -241,6 +249,10 @@ struct dri2_egl_display
    const gralloc_module_t *gralloc;
 #endif
 
+#ifdef HAVE_TIZEN_PLATFORM
+   tpl_display_t            *tpl_display;
+#endif
+
    bool                      is_render_node;
    bool                      is_different_gpu;
 };
@@ -295,7 +307,18 @@ struct dri2_egl_surface
    /* EGL-owned buffers */
    __DRIbuffer           *local_buffers[__DRI_BUFFER_COUNT];
 
-#if defined(HAVE_WAYLAND_PLATFORM) || defined(HAVE_DRM_PLATFORM)
+#ifdef HAVE_TIZEN_PLATFORM
+   void          *native_win;
+   tpl_surface_t *tpl_surface;
+   tbm_surface_h  tbm_surface;
+   tbm_format     tbm_format;
+   __DRIimage    *dri_image_back;
+   __DRIimage    *dri_image_front;
+   int buffer_count;
+#endif
+
+#if defined(HAVE_WAYLAND_PLATFORM) || defined(HAVE_DRM_PLATFORM) || defined(HAVE_TIZEN_PLATFORM)
+
    struct {
 #ifdef HAVE_WAYLAND_PLATFORM
       struct wl_buffer   *wl_buffer;
@@ -309,6 +332,13 @@ struct dri2_egl_surface
 #endif
 #ifdef HAVE_DRM_PLATFORM
       struct gbm_bo       *bo;
+#endif
+#ifdef HAVE_TIZEN_PLATFORM
+      /* Used to record all the tbm_surface created by tpl_surface and their ages.
+      * Usually Tizen uses at most triple buffers in tpl_surface (tbm_surface_queue)
+      * so hardcode the number of color_buffers to 3.
+      */
+      tbm_surface_h tbm_surface;
 #endif
       bool                locked;
       int                 age;
@@ -489,6 +519,19 @@ static inline EGLBoolean
 dri2_initialize_surfaceless(_EGLDriver *drv, _EGLDisplay *disp)
 {
    return _eglError(EGL_NOT_INITIALIZED, "Surfaceless platform not built");
+}
+#endif
+
+#ifdef HAVE_TIZEN_PLATFORM
+EGLBoolean
+dri2_initialize_tizen(_EGLDriver *drv, _EGLDisplay *disp);
+void
+dri2_teardown_tizen(_EGLDisplay *disp);
+#else
+static inline EGLBoolean
+dri2_initialize_tizen(_EGLDriver *drv, _EGLDisplay *disp)
+{
+    return _eglError(EGL_NOT_INITIALIZED, "tizen platform not built");
 }
 #endif
 

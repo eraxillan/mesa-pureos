@@ -138,6 +138,11 @@ elif with_platform_haiku
   deps_for_egl += cpp.find_library('be')
 endif
 
+if with_platform_tizen
+  files_egl += files('drivers/dri2/platform_tizen.c')
+  deps_for_egl += dep_tizen
+endif
+
 if cc.has_function('mincore')
   c_args_for_egl += '-DHAVE_MINCORE'
 endif

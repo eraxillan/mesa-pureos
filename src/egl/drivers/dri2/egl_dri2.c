@@ -135,6 +135,11 @@ dri_is_thread_safe(void *loaderPrivate)
       return true;
 #endif
 
+#ifdef HAVE_TIZEN_PLATFORM
+   if (display->Platform == _EGL_PLATFORM_TIZEN)
+      return true;
+#endif
+
    return true;
 }
 
@@ -886,6 +891,11 @@ dri2_initialize(_EGLDriver *drv, _EGLDisplay *disp)
    case _EGL_PLATFORM_ANDROID:
       ret = dri2_initialize_android(drv, disp);
       break;
+#ifdef HAVE_TIZEN_PLATFORM
+   case _EGL_PLATFORM_TIZEN:
+      ret = dri2_initialize_tizen(drv, disp);
+      break;
+#endif
    default:
       unreachable("Callers ensure we cannot get here.");
       return EGL_FALSE;
@@ -953,6 +963,11 @@ dri2_display_destroy(_EGLDisplay *disp)
    case _EGL_PLATFORM_WAYLAND:
       dri2_teardown_wayland(dri2_dpy);
       break;
+#ifdef HAVE_TIZEN_PLATFORM
+   case _EGL_PLATFORM_TIZEN:
+      dri2_teardown_tizen(disp);
+      break;
+#endif
    default:
       /* TODO: add teardown for other platforms */
       break;

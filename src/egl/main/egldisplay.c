@@ -70,6 +70,7 @@ static const struct {
    { _EGL_PLATFORM_ANDROID, "android" },
    { _EGL_PLATFORM_HAIKU, "haiku" },
    { _EGL_PLATFORM_SURFACELESS, "surfaceless" },
+   { _EGL_PLATFORM_TIZEN, "tizen" },
 };
 
 
@@ -83,7 +84,7 @@ _eglGetNativePlatformFromEnv(void)
    const char *plat_name;
    EGLint i;
 
-   plat_name = getenv("EGL_PLATFORM");
+   plat_name = getenv("EGL_PLATFORM_MESA");
    /* try deprecated env variable */
    if (!plat_name || !plat_name[0])
       plat_name = getenv("EGL_DISPLAY");
@@ -114,6 +115,11 @@ _eglNativePlatformDetectNativeDisplay(void *nativeDisplay)
       void *first_pointer = *(void **) nativeDisplay;
 
       (void) first_pointer; /* silence unused var warning */
+
+#ifdef HAVE_TIZEN_PLATFORM
+      /* In Tizen Platform, _EGL_PLATFORM_TIZEN handles DRM(gbm) and wayland_egl platform together */
+      return _EGL_PLATFORM_TIZEN;
+#endif
 
 #ifdef HAVE_WAYLAND_PLATFORM
       /* wl_display is a wl_proxy, which is a wl_object.
@@ -156,6 +162,11 @@ _eglGetNativePlatform(void *nativeDisplay)
 
       detected_platform = _eglGetNativePlatformFromEnv();
       detection_method = "environment overwrite";
+
+#ifdef HAVE_TIZEN_PLATFORM
+      if (native_platform != _EGL_INVALID_PLATFORM)
+         native_platform = _EGL_PLATFORM_TIZEN;
+#endif
 
       if (detected_platform == _EGL_INVALID_PLATFORM) {
          detected_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
@@ -542,3 +553,18 @@ _eglGetSurfacelessDisplay(void *native_display,
    return _eglFindDisplay(_EGL_PLATFORM_SURFACELESS, native_display);
 }
 #endif /* HAVE_SURFACELESS_PLATFORM */
+
+#ifdef HAVE_TIZEN_PLATFORM
+_EGLDisplay*
+_eglGetTizenDisplay(void *native_display,
+                    const EGLAttrib *attrib_list)
+{
+   /* EGL_EXT_platform_wayland recognizes no attributes. */
+   if (attrib_list != NULL && attrib_list[0] != EGL_NONE) {
+      _eglError(EGL_BAD_ATTRIBUTE, "eglGetPlatformDisplay");
+      return NULL;
+   }
+
+   return _eglFindDisplay(_EGL_PLATFORM_TIZEN, native_display);
+}
+#endif /* HAVE_TIZEN_PLATFORM */
